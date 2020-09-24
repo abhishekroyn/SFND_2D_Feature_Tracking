@@ -39,6 +39,7 @@ int main(int argc, const char *argv[])
     int dataBufferSize = 2;       // no. of images which are held in memory (ring buffer) at the same time
     vector<DataFrame> dataBuffer; // list of data frames which are held in memory at the same time
     bool bVis = false;            // visualize results
+    bool bVisKeyPoints = false;   // visualize keypoint results
 
     /* MAIN LOOP OVER ALL IMAGES */
 
@@ -64,6 +65,12 @@ int main(int argc, const char *argv[])
         frame.cameraImg = imgGray;
         dataBuffer.push_back(frame);
 
+        // simple implementation of ring buffer for popping out old images
+        if (dataBuffer.size() > dataBufferSize)
+        {
+            dataBuffer.erase(dataBuffer.begin());
+        }
+
         //// EOF STUDENT ASSIGNMENT
         cout << "#1 : LOAD IMAGE INTO BUFFER done" << endl;
 
@@ -76,14 +83,20 @@ int main(int argc, const char *argv[])
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
         //// -> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
+        double t1 = 0;
 
         if (detectorType.compare("SHITOMASI") == 0)
         {
-            detKeypointsShiTomasi(keypoints, imgGray, false);
+            t1 = detKeypointsShiTomasi(keypoints, imgGray, bVisKeyPoints);
+        }
+        else if (detectorType.compare("HARRIS") == 0)
+        {
+            t1 = detKeypointsHarris(keypoints, imgGray, bVisKeyPoints);
         }
         else
         {
-            //...
+            // only applicable for detectorType as FAST, BRISK, ORB, AKAZE, SIFT
+            t1 = detKeypointsModern(keypoints, imgGray, detectorType, bVisKeyPoints);
         }
         //// EOF STUDENT ASSIGNMENT
 
@@ -95,7 +108,19 @@ int main(int argc, const char *argv[])
         cv::Rect vehicleRect(535, 180, 180, 150);
         if (bFocusOnVehicle)
         {
-            // ...
+            for (auto it = keypoints.begin(); it != keypoints.end();)
+            {
+                // remove all those keypoints which are not within defined region of interest
+                if (!vehicleRect.contains(it->pt))
+                {
+                    keypoints.erase(it);
+                }
+                else {
+                    // increase the iterator only when keypoint was not erased,
+                    // as when keypoint is erased, the iterator automatically goes to next value
+                    it++;
+                }
+            }
         }
 
         //// EOF STUDENT ASSIGNMENT
@@ -178,6 +203,8 @@ int main(int argc, const char *argv[])
             }
             bVis = false;
         }
+
+        cout << "================================" << endl;
 
     } // eof loop over all images
 
