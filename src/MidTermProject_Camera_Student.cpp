@@ -41,6 +41,10 @@ int main(int argc, const char *argv[])
     bool bVis = false;            // visualize results
     bool bVisKeyPoints = false;   // visualize keypoint results
 
+    int totalNumKeyPoints = 0;
+
+    string detectorType = "SHITOMASI";  // SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
+
     /* MAIN LOOP OVER ALL IMAGES */
 
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex++)
@@ -78,7 +82,6 @@ int main(int argc, const char *argv[])
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "SHITOMASI";
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
@@ -122,6 +125,8 @@ int main(int argc, const char *argv[])
                 }
             }
         }
+
+        totalNumKeyPoints += keypoints.size();
 
         //// EOF STUDENT ASSIGNMENT
 
@@ -187,7 +192,7 @@ int main(int argc, const char *argv[])
             cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << endl;
 
             // visualize matches between current and previous image
-            bVis = true;
+            bVis = false;
             if (bVis)
             {
                 cv::Mat matchImg = ((dataBuffer.end() - 1)->cameraImg).clone();
@@ -209,6 +214,11 @@ int main(int argc, const char *argv[])
         cout << "================================" << endl;
 
     } // eof loop over all images
+
+    cout << "======== Summary Results =======" << endl;
+    cout << "Detector type                                                        : " << detectorType << endl;
+    cout << "Total number of keypoints on the preceding vehicle for all 10 images : " << totalNumKeyPoints << endl;
+    cout << "================================" << endl;
 
     return 0;
 }
