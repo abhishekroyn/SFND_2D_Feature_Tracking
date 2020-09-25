@@ -38,12 +38,16 @@ int main(int argc, const char *argv[])
     // misc
     int dataBufferSize = 2;       // no. of images which are held in memory (ring buffer) at the same time
     vector<DataFrame> dataBuffer; // list of data frames which are held in memory at the same time
+
     bool bVis = false;            // visualize results
     bool bVisKeyPoints = false;   // visualize keypoint results
 
-    int totalNumKeyPoints = 0;
+    int totalNumKeyPoints = 0;          // total number of keypoints on the preceding vehicle for all 10 images
+    int totalNumMatchedKeyPoints = 0;   // total number of matched keypoints on the preceding vehicle for all 10 images
+    double timeTotal = 0;               // total time taken for keypoint detection and descriptor extraction
 
     string detectorType = "SHITOMASI";  // SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
+    string descriptorType = "BRISK";    // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
 
     /* MAIN LOOP OVER ALL IMAGES */
 
@@ -86,20 +90,20 @@ int main(int argc, const char *argv[])
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
         //// -> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
-        double t1 = 0;
+        double timeKeyPointDetec = 0;
 
         if (detectorType.compare("SHITOMASI") == 0)
         {
-            t1 = detKeypointsShiTomasi(keypoints, imgGray, bVisKeyPoints);
+            timeKeyPointDetec = detKeypointsShiTomasi(keypoints, imgGray, bVisKeyPoints);
         }
         else if (detectorType.compare("HARRIS") == 0)
         {
-            t1 = detKeypointsHarris(keypoints, imgGray, bVisKeyPoints);
+            timeKeyPointDetec = detKeypointsHarris(keypoints, imgGray, bVisKeyPoints);
         }
         else
         {
             // only applicable for detectorType as FAST, BRISK, ORB, AKAZE, SIFT
-            t1 = detKeypointsModern(keypoints, imgGray, detectorType, bVisKeyPoints);
+            timeKeyPointDetec = detKeypointsModern(keypoints, imgGray, detectorType, bVisKeyPoints);
         }
         //// EOF STUDENT ASSIGNMENT
 
@@ -127,7 +131,6 @@ int main(int argc, const char *argv[])
         }
 
         totalNumKeyPoints += keypoints.size();
-
         //// EOF STUDENT ASSIGNMENT
 
         // optional : limit number of keypoints (helpful for debugging and learning)
@@ -155,10 +158,9 @@ int main(int argc, const char *argv[])
         //// -> BRIEF, ORB, FREAK, AKAZE, SIFT
 
         cv::Mat descriptors;
-        string descriptorType = "BRISK"; // BRIEF, ORB, FREAK, AKAZE, SIFT
 
-        double t2 = 0;
-        t2 = descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descriptorType);
+        double timeDescExtrac = 0;
+        timeDescExtrac = descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descriptorType);
         //// EOF STUDENT ASSIGNMENT
 
         // push descriptors for current frame to end of data buffer
@@ -184,6 +186,7 @@ int main(int argc, const char *argv[])
                              (dataBuffer.end() - 2)->descriptors, (dataBuffer.end() - 1)->descriptors,
                              matches, descriptorType, matcherType, selectorType);
 
+            totalNumMatchedKeyPoints += matches.size();
             //// EOF STUDENT ASSIGNMENT
 
             // store matches in current data frame
@@ -210,14 +213,18 @@ int main(int argc, const char *argv[])
             }
             bVis = false;
         }
-
         cout << "================================" << endl;
 
+        timeTotal += timeKeyPointDetec + timeDescExtrac;
     } // eof loop over all images
 
     cout << "======== Summary Results =======" << endl;
-    cout << "Detector type                                                        : " << detectorType << endl;
-    cout << "Total number of keypoints on the preceding vehicle for all 10 images : " << totalNumKeyPoints << endl;
+    cout << "Detector type                                                                : " << detectorType << endl;
+    cout << "Total number of keypoints on the preceding vehicle for all 10 images         : " << totalNumKeyPoints << endl;
+    cout << "Descriptor type                                                              : " << descriptorType << endl;
+    cout << "Total number of matched keypoints on the preceding vehicle for all 10 images : " << totalNumMatchedKeyPoints << endl;
+    cout << "Total time taken for keypoint detection and descriptor extraction            : " << timeTotal * 1000 / 1.0 << " ms" << endl;
+    cout << "Efficiency                                                                   : " << totalNumMatchedKeyPoints / (timeTotal * 1000 / 1.0) << " matched-keypoint/ms" << endl;
     cout << "================================" << endl;
 
     return 0;
