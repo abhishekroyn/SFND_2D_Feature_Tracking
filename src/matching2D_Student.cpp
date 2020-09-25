@@ -238,7 +238,7 @@ double detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string 
 {
     cv::Ptr<cv::FeatureDetector> detector;
 
-    if (detectorType == "FAST")
+    if (detectorType.compare("FAST") == 0)
     {
         // FAST detector parameters
         int threshold = 30;                                                              // difference between intensity of the central pixel and pixels of a circle around this pixel
@@ -248,25 +248,25 @@ double detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string 
 
         detector = cv::FastFeatureDetector::create(threshold, bNMS, type);
     }
-    else if (detectorType == "BRISK")
+    else if (detectorType.compare("BRISK") == 0)
     {
         detector = cv::BRISK::create();
     }
-    else if (detectorType == "ORB")
+    else if (detectorType.compare("ORB") == 0)
     {
         detector = cv::ORB::create();
     }
-    else if (detectorType == "AKAZE")
+    else if (detectorType.compare("AKAZE") == 0)
     {
         detector = cv::AKAZE::create();
     }
-    else if (detectorType == "SIFT")
+    else if (detectorType.compare("SIFT") == 0)
     {
         detector = cv::xfeatures2d::SIFT::create();
     }
     else
     {
-        cerr << "Invalid detector type entered. Kindly choose from [SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, and SIFT]." << endl;
+        cerr << "Invalid detector type entered! Kindly choose from [SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, and SIFT]." << endl;
     }
 
     double t = (double)cv::getTickCount();
